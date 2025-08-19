@@ -31,7 +31,9 @@
 
         .button-box {
             display: flex;
-            gap: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
         }
 
         button {
@@ -47,16 +49,25 @@
         button:hover {
             background-color: #666;
         }
+
+        button:disabled {
+            background-color: #333;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
 
+    <div class="timer-box" id="startTimeDisplay">Start Time: --:--:-- | --/--/----</div>
     <div class="timer-box" id="loginTimer">Login Time: 00:00:00</div>
     <div class="timer-box" id="breakTimer">Break Time: 00:00:00</div>
+    <div class="timer-box" id="stopTimeDisplay">Stop Time: --:--:-- | --/--/----</div>
 
     <div class="button-box">
-        <button id="startBreakBtn">Take Break</button>
-        <button id="resumeWorkBtn" disabled>Resume Work</button>
+        <button id="startBtn">Start Time</button>
+        <button id="loginBtn" disabled>Login Session</button>
+        <button id="breakBtn" disabled>Break</button>
+        <button id="stopBtn" disabled>Stop Time</button>
     </div>
 
     <script>
@@ -64,11 +75,17 @@
         let breakSeconds = 0;
         let isOnBreak = false;
         let interval;
+        let isRunning = false;
 
         const loginDisplay = document.getElementById('loginTimer');
         const breakDisplay = document.getElementById('breakTimer');
-        const startBreakBtn = document.getElementById('startBreakBtn');
-        const resumeWorkBtn = document.getElementById('resumeWorkBtn');
+        const startTimeDisplay = document.getElementById('startTimeDisplay');
+        const stopTimeDisplay = document.getElementById('stopTimeDisplay');
+
+        const startBtn = document.getElementById('startBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        const breakBtn = document.getElementById('breakBtn');
+        const stopBtn = document.getElementById('stopBtn');
 
         function formatTime(seconds) {
             const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
@@ -77,7 +94,26 @@
             return `${hrs}:${mins}:${secs}`;
         }
 
+        function getISTDateTimeString() {
+            const now = new Date();
+
+            // Convert to IST (UTC + 5:30)
+            const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+            const istTime = new Date(utc + (5.5 * 60 * 60 * 1000));
+
+            const time = istTime.toLocaleTimeString('en-IN', { hour12: false });
+            const date = istTime.toLocaleDateString('en-IN'); // DD/MM/YYYY
+
+            // Format to DD-MM-YYYY
+            const [day, month, year] = date.split('/');
+            const formattedDate = `${day}-${month}-${year}`;
+
+            return `${time} | ${formattedDate}`;
+        }
+
         function updateTimers() {
+            if (!isRunning) return;
+
             if (isOnBreak) {
                 breakSeconds++;
                 breakDisplay.textContent = `Break Time: ${formatTime(breakSeconds)}`;
@@ -87,18 +123,38 @@
             }
         }
 
-        interval = setInterval(updateTimers, 1000);
+        startBtn.addEventListener('click', () => {
+            const startTime = getISTDateTimeString();
+            startTimeDisplay.textContent = `Start Time: ${startTime}`;
+            isRunning = true;
+            isOnBreak = false;
+            interval = setInterval(updateTimers, 1000);
 
-        startBreakBtn.addEventListener('click', () => {
-            isOnBreak = true;
-            startBreakBtn.disabled = true;
-            resumeWorkBtn.disabled = false;
+            loginBtn.disabled = false;
+            breakBtn.disabled = false;
+            stopBtn.disabled = false;
+            startBtn.disabled = true;
         });
 
-        resumeWorkBtn.addEventListener('click', () => {
+        loginBtn.addEventListener('click', () => {
             isOnBreak = false;
-            resumeWorkBtn.disabled = true;
-            startBreakBtn.disabled = false;
+        });
+
+        breakBtn.addEventListener('click', () => {
+            isOnBreak = true;
+        });
+
+        stopBtn.addEventListener('click', () => {
+            clearInterval(interval);
+            isRunning = false;
+
+            const stopTime = getISTDateTimeString();
+            stopTimeDisplay.textContent = `Stop Time: ${stopTime}`;
+
+            startBtn.disabled = true;
+            loginBtn.disabled = true;
+            breakBtn.disabled = true;
+            stopBtn.disabled = true;
         });
     </script>
 
