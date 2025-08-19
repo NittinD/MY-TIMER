@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Stopwatch Page</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #stopwatch {
+            background-color: #222;
+            color: #0f0;
+            padding: 20px 30px;
+            border-radius: 10px;
+            font-size: 32px;
+            font-family: monospace;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="stopwatch">Session: 00:00:00</div>
+
+    <script>
+        let seconds = 0;
+        const stopwatch = document.getElementById('stopwatch');
+
+        setInterval(() => {
+            seconds++;
+            const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
+            const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+            const secs = String(seconds % 60).padStart(2, '0');
+            stopwatch.textContent = `Session: ${hrs}:${mins}:${secs}`;
+        }, 1000);
+    </script>
+</body>
+</html>
