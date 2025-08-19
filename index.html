@@ -2,44 +2,105 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My Stopwatch Page</title>
+    <title>Work & Break Timer</title>
     <style>
         body {
             background-color: #121212;
             color: #fff;
             font-family: Arial, sans-serif;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
         }
 
-        #stopwatch {
+        .timer-box {
             background-color: #222;
             color: #0f0;
             padding: 20px 30px;
             border-radius: 10px;
-            font-size: 32px;
+            font-size: 24px;
             font-family: monospace;
             box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+            margin-bottom: 20px;
+            min-width: 300px;
+            text-align: center;
+        }
+
+        .button-box {
+            display: flex;
+            gap: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: #444;
+            color: #fff;
+        }
+
+        button:hover {
+            background-color: #666;
         }
     </style>
 </head>
 <body>
-    <div id="stopwatch">Session: 00:00:00</div>
+
+    <div class="timer-box" id="loginTimer">Login Time: 00:00:00</div>
+    <div class="timer-box" id="breakTimer">Break Time: 00:00:00</div>
+
+    <div class="button-box">
+        <button id="startBreakBtn">Take Break</button>
+        <button id="resumeWorkBtn" disabled>Resume Work</button>
+    </div>
 
     <script>
-        let seconds = 0;
-        const stopwatch = document.getElementById('stopwatch');
+        let loginSeconds = 0;
+        let breakSeconds = 0;
+        let isOnBreak = false;
+        let interval;
 
-        setInterval(() => {
-            seconds++;
+        const loginDisplay = document.getElementById('loginTimer');
+        const breakDisplay = document.getElementById('breakTimer');
+        const startBreakBtn = document.getElementById('startBreakBtn');
+        const resumeWorkBtn = document.getElementById('resumeWorkBtn');
+
+        function formatTime(seconds) {
             const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
             const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
             const secs = String(seconds % 60).padStart(2, '0');
-            stopwatch.textContent = `Session: ${hrs}:${mins}:${secs}`;
-        }, 1000);
+            return `${hrs}:${mins}:${secs}`;
+        }
+
+        function updateTimers() {
+            if (isOnBreak) {
+                breakSeconds++;
+                breakDisplay.textContent = `Break Time: ${formatTime(breakSeconds)}`;
+            } else {
+                loginSeconds++;
+                loginDisplay.textContent = `Login Time: ${formatTime(loginSeconds)}`;
+            }
+        }
+
+        interval = setInterval(updateTimers, 1000);
+
+        startBreakBtn.addEventListener('click', () => {
+            isOnBreak = true;
+            startBreakBtn.disabled = true;
+            resumeWorkBtn.disabled = false;
+        });
+
+        resumeWorkBtn.addEventListener('click', () => {
+            isOnBreak = false;
+            resumeWorkBtn.disabled = true;
+            startBreakBtn.disabled = false;
+        });
     </script>
+
 </body>
 </html>
