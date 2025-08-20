@@ -71,15 +71,16 @@
     </div>
 
     <script>
-        let isOnBreak = false;
         let isRunning = false;
+        let isOnBreak = false;
+
+        let startTime = null;
+        let stopTime = null;
+
+        let breakStart = null;
+        let totalBreakDuration = 0;
+
         let interval;
-
-        let loginStartTime = null;
-        let breakStartTime = null;
-
-        let totalLoginTime = 0;
-        let totalBreakTime = 0;
 
         const loginDisplay = document.getElementById('loginTimer');
         const breakDisplay = document.getElementById('breakTimer');
@@ -93,107 +94,4 @@
 
         function formatTime(seconds) {
             const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
-            const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
-            const secs = String(seconds % 60).padStart(2, '0');
-            return `${hrs}:${mins}:${secs}`;
-        }
-
-        function getISTDateTimeString() {
-            const now = new Date();
-            const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-            const istTime = new Date(utc + (5.5 * 60 * 60 * 1000));
-
-            const time = istTime.toLocaleTimeString('en-IN', { hour12: false });
-            const date = istTime.toLocaleDateString('en-IN');
-            const [day, month, year] = date.split('/');
-            const formattedDate = `${day}-${month}-${year}`;
-
-            return `${time} | ${formattedDate}`;
-        }
-
-        function updateTimers() {
-            const now = Date.now();
-
-            if (isRunning) {
-                if (isOnBreak && breakStartTime) {
-                    totalBreakTime += now - breakStartTime;
-                    breakStartTime = now;
-                } else if (!isOnBreak && loginStartTime) {
-                    totalLoginTime += now - loginStartTime;
-                    loginStartTime = now;
-                }
-
-                const loginSecs = Math.floor(totalLoginTime / 1000);
-                const breakSecs = Math.floor(totalBreakTime / 1000);
-
-                loginDisplay.textContent = `Login Time: ${formatTime(loginSecs)}`;
-                breakDisplay.textContent = `Break Time: ${formatTime(breakSecs)}`;
-            }
-        }
-
-        startBtn.addEventListener('click', () => {
-            const startTime = getISTDateTimeString();
-            startTimeDisplay.textContent = `Start Time: ${startTime}`;
-
-            isRunning = true;
-            isOnBreak = false;
-            loginStartTime = Date.now();
-
-            interval = setInterval(updateTimers, 1000);
-
-            loginBtn.disabled = false;
-            breakBtn.disabled = false;
-            stopBtn.disabled = false;
-            startBtn.disabled = true;
-        });
-
-        loginBtn.addEventListener('click', () => {
-            if (isOnBreak && breakStartTime) {
-                totalBreakTime += Date.now() - breakStartTime;
-                breakStartTime = null;
-            }
-            isOnBreak = false;
-            loginStartTime = Date.now();
-        });
-
-        breakBtn.addEventListener('click', () => {
-            if (!isOnBreak && loginStartTime) {
-                totalLoginTime += Date.now() - loginStartTime;
-                loginStartTime = null;
-            }
-            isOnBreak = true;
-            breakStartTime = Date.now();
-        });
-
-        stopBtn.addEventListener('click', () => {
-            clearInterval(interval);
-            isRunning = false;
-
-            const now = Date.now();
-
-            if (isOnBreak && breakStartTime) {
-                totalBreakTime += now - breakStartTime;
-                breakStartTime = null;
-            } else if (!isOnBreak && loginStartTime) {
-                totalLoginTime += now - loginStartTime;
-                loginStartTime = null;
-            }
-
-            const loginSecs = Math.floor(totalLoginTime / 1000);
-            const breakSecs = Math.floor(totalBreakTime / 1000);
-
-            loginDisplay.textContent = `Login Time: ${formatTime(loginSecs)}`;
-            breakDisplay.textContent = `Break Time: ${formatTime(breakSecs)}`;
-
-            const stopTime = getISTDateTimeString();
-            stopTimeDisplay.textContent = `Stop Time: ${stopTime}`;
-
-            startBtn.disabled = true;
-            loginBtn.disabled = true;
-            breakBtn.disabled = true;
-            stopBtn.disabled = true;
-        });
-    </script>
-
-</body>
-</html>
+            const mins = String(Math.floor((seconds % 3600) / 60)).pa
