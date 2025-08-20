@@ -76,12 +76,14 @@
     let breakStart = null;
     let stopTime = null;
 
-    let totalBreak = 0;
-    let isLoginActive = false;
-    let isOnBreak = false;
+    let loginElapsed = 0;
+    let breakElapsed = 0;
 
     let loginInterval = null;
     let breakInterval = null;
+
+    let isLoginRunning = false;
+    let isBreakRunning = false;
 
     const startTimeDisplay = document.getElementById("startTimeDisplay");
     const stopTimeDisplay = document.getElementById("stopTimeDisplay");
@@ -101,19 +103,17 @@
     }
 
     function updateLoginTimer() {
-        if (isLoginActive) {
-            const now = new Date();
-            const seconds = Math.floor((now - loginStart) / 1000) - totalBreak;
-            loginTimer.textContent = `Login Time: ${formatTime(seconds)}`;
-        }
+        const now = new Date();
+        loginElapsed = Math.floor((now - loginStart) / 1000) + loginElapsed;
+        loginStart = now;
+        loginTimer.textContent = `Login Time: ${formatTime(loginElapsed)}`;
     }
 
     function updateBreakTimer() {
-        if (isOnBreak && breakStart) {
-            const now = new Date();
-            const seconds = Math.floor((now - breakStart) / 1000);
-            breakTimer.textContent = `Break Time: ${formatTime(seconds)}`;
-        }
+        const now = new Date();
+        breakElapsed = Math.floor((now - breakStart) / 1000) + breakElapsed;
+        breakStart = now;
+        breakTimer.textContent = `Break Time: ${formatTime(breakElapsed)}`;
     }
 
     startBtn.addEventListener("click", () => {
@@ -121,23 +121,28 @@
         startTimeDisplay.textContent = `Start Time: ${startTime.toLocaleTimeString()} | ${startTime.toLocaleDateString()}`;
 
         loginBtn.disabled = false;
+        breakBtn.disabled = false;
         stopBtn.disabled = false;
         startBtn.disabled = true;
 
-        // Reset all
+        // Reset
+        loginElapsed = 0;
+        breakElapsed = 0;
         loginTimer.textContent = "Login Time: 00:00:00";
         breakTimer.textContent = "Break Time: 00:00:00";
         stopTimeDisplay.textContent = "Stop Time: --:--:-- | --/--/----";
-        totalBreak = 0;
-        isOnBreak = false;
-        isLoginActive = false;
     });
 
     loginBtn.addEventListener("click", () => {
-        if (!isLoginActive) {
+        if (!isLoginRunning) {
+            if (isBreakRunning) {
+                clearInterval(breakInterval);
+                isBreakRunning = false;
+            }
+
             loginStart = new Date();
-            isLoginActive = true;
             loginInterval = setInterval(updateLoginTimer, 1000);
+            isLoginRunning = true;
 
             loginBtn.disabled = true;
             breakBtn.disabled = false;
@@ -145,38 +150,35 @@
     });
 
     breakBtn.addEventListener("click", () => {
-        if (!isOnBreak) {
+        if (!isBreakRunning) {
+            if (isLoginRunning) {
+                clearInterval(loginInterval);
+                isLoginRunning = false;
+            }
+
             breakStart = new Date();
-            isOnBreak = true;
-            breakBtn.textContent = "End Break";
             breakInterval = setInterval(updateBreakTimer, 1000);
-        } else {
-            clearInterval(breakInterval);
-            const breakEnd = new Date();
-            const breakDuration = Math.floor((breakEnd - breakStart) / 1000);
-            totalBreak += breakDuration;
-            breakTimer.textContent = "Break Time: 00:00:00";
-            isOnBreak = false;
-            breakBtn.textContent = "Break";
+            isBreakRunning = true;
+
+            breakBtn.disabled = true;
+            loginBtn.disabled = false;
         }
     });
 
     stopBtn.addEventListener("click", () => {
-        if (isLoginActive) {
-            clearInterval(loginInterval);
-            clearInterval(breakInterval);
+        if (isLoginRunning) clearInterval(loginInterval);
+        if (isBreakRunning) clearInterval(breakInterval);
 
-            stopTime = new Date();
-            stopTimeDisplay.textContent = `Stop Time: ${stopTime.toLocaleTimeString()} | ${stopTime.toLocaleDateString()}`;
+        isLoginRunning = false;
+        isBreakRunning = false;
 
-            loginBtn.disabled = true;
-            breakBtn.disabled = true;
-            stopBtn.disabled = true;
-            startBtn.disabled = false;
+        stopTime = new Date();
+        stopTimeDisplay.textContent = `Stop Time: ${stopTime.toLocaleTimeString()} | ${stopTime.toLocaleDateString()}`;
 
-            isLoginActive = false;
-            isOnBreak = false;
-        }
+        startBtn.disabled = false;
+        loginBtn.disabled = true;
+        breakBtn.disabled = true;
+        stopBtn.disabled = true;
     });
 </script>
 
