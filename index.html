@@ -98,7 +98,7 @@
     const loginTimerDisplay = document.getElementById("loginTimer");
     const breakTimerDisplay = document.getElementById("breakTimer");
 
-    // Time formatter
+    // Format seconds to HH:MM:SS
     function formatTime(seconds) {
       const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
       const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
@@ -106,53 +106,45 @@
       return `${hrs}:${mins}:${secs}`;
     }
 
-    // Start login timer
     function startLoginTimer() {
       if (isBreakRunning) stopBreakTimer();
 
-      loginStartTime = new Date();
+      loginStartTime = Date.now();
       isLoginRunning = true;
 
       loginInterval = setInterval(() => {
-        const now = new Date();
-        const elapsed = Math.floor((now - loginStartTime) / 1000);
+        const elapsed = Math.floor((Date.now() - loginStartTime) / 1000);
         loginTimerDisplay.textContent = `Login Time: ${formatTime(totalLoginSeconds + elapsed)}`;
       }, 1000);
     }
 
-    // Stop login timer
     function stopLoginTimer() {
       clearInterval(loginInterval);
-      const now = new Date();
-      const elapsed = Math.floor((now - loginStartTime) / 1000);
+      const elapsed = Math.floor((Date.now() - loginStartTime) / 1000);
       totalLoginSeconds += elapsed;
       isLoginRunning = false;
     }
 
-    // Start break timer
     function startBreakTimer() {
       if (isLoginRunning) stopLoginTimer();
 
-      breakStartTime = new Date();
+      breakStartTime = Date.now();
       isBreakRunning = true;
 
       breakInterval = setInterval(() => {
-        const now = new Date();
-        const elapsed = Math.floor((now - breakStartTime) / 1000);
+        const elapsed = Math.floor((Date.now() - breakStartTime) / 1000);
         breakTimerDisplay.textContent = `Break Time: ${formatTime(totalBreakSeconds + elapsed)}`;
       }, 1000);
     }
 
-    // Stop break timer
     function stopBreakTimer() {
       clearInterval(breakInterval);
-      const now = new Date();
-      const elapsed = Math.floor((now - breakStartTime) / 1000);
+      const elapsed = Math.floor((Date.now() - breakStartTime) / 1000);
       totalBreakSeconds += elapsed;
       isBreakRunning = false;
     }
 
-    // Button actions
+    // Button events
     startBtn.addEventListener("click", () => {
       startTime = new Date();
       startTimeDisplay.textContent = `Start Time: ${startTime.toLocaleTimeString()} | ${startTime.toLocaleDateString()}`;
@@ -162,12 +154,15 @@
       stopBtn.disabled = false;
       startBtn.disabled = true;
 
-      // Reset previous session data
+      // Reset session
       totalLoginSeconds = 0;
       totalBreakSeconds = 0;
       loginTimerDisplay.textContent = "Login Time: 00:00:00";
       breakTimerDisplay.textContent = "Break Time: 00:00:00";
       stopTimeDisplay.textContent = "Stop Time: --:--:-- | --/--/----";
+
+      // ✅ Auto-start login timer
+      startLoginTimer();
     });
 
     loginBtn.addEventListener("click", () => {
