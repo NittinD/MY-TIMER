@@ -71,11 +71,15 @@
     </div>
 
     <script>
-        let loginSeconds = 0;
-        let breakSeconds = 0;
         let isOnBreak = false;
-        let interval;
         let isRunning = false;
+        let interval;
+
+        let loginStartTime = null;
+        let breakStartTime = null;
+
+        let totalLoginTime = 0;
+        let totalBreakTime = 0;
 
         const loginDisplay = document.getElementById('loginTimer');
         const breakDisplay = document.getElementById('breakTimer');
@@ -96,15 +100,11 @@
 
         function getISTDateTimeString() {
             const now = new Date();
-
-            // Convert to IST (UTC + 5:30)
             const utc = now.getTime() + now.getTimezoneOffset() * 60000;
             const istTime = new Date(utc + (5.5 * 60 * 60 * 1000));
 
             const time = istTime.toLocaleTimeString('en-IN', { hour12: false });
-            const date = istTime.toLocaleDateString('en-IN'); // DD/MM/YYYY
-
-            // Format to DD-MM-YYYY
+            const date = istTime.toLocaleDateString('en-IN');
             const [day, month, year] = date.split('/');
             const formattedDate = `${day}-${month}-${year}`;
 
@@ -112,22 +112,33 @@
         }
 
         function updateTimers() {
-            if (!isRunning) return;
+            const now = Date.now();
 
-            if (isOnBreak) {
-                breakSeconds++;
-                breakDisplay.textContent = `Break Time: ${formatTime(breakSeconds)}`;
-            } else {
-                loginSeconds++;
-                loginDisplay.textContent = `Login Time: ${formatTime(loginSeconds)}`;
+            if (isRunning) {
+                if (isOnBreak && breakStartTime) {
+                    totalBreakTime += now - breakStartTime;
+                    breakStartTime = now;
+                } else if (!isOnBreak && loginStartTime) {
+                    totalLoginTime += now - loginStartTime;
+                    loginStartTime = now;
+                }
+
+                const loginSecs = Math.floor(totalLoginTime / 1000);
+                const breakSecs = Math.floor(totalBreakTime / 1000);
+
+                loginDisplay.textContent = `Login Time: ${formatTime(loginSecs)}`;
+                breakDisplay.textContent = `Break Time: ${formatTime(breakSecs)}`;
             }
         }
 
         startBtn.addEventListener('click', () => {
             const startTime = getISTDateTimeString();
             startTimeDisplay.textContent = `Start Time: ${startTime}`;
+
             isRunning = true;
             isOnBreak = false;
+            loginStartTime = Date.now();
+
             interval = setInterval(updateTimers, 1000);
 
             loginBtn.disabled = false;
@@ -137,16 +148,42 @@
         });
 
         loginBtn.addEventListener('click', () => {
+            if (isOnBreak && breakStartTime) {
+                totalBreakTime += Date.now() - breakStartTime;
+                breakStartTime = null;
+            }
             isOnBreak = false;
+            loginStartTime = Date.now();
         });
 
         breakBtn.addEventListener('click', () => {
+            if (!isOnBreak && loginStartTime) {
+                totalLoginTime += Date.now() - loginStartTime;
+                loginStartTime = null;
+            }
             isOnBreak = true;
+            breakStartTime = Date.now();
         });
 
         stopBtn.addEventListener('click', () => {
             clearInterval(interval);
             isRunning = false;
+
+            const now = Date.now();
+
+            if (isOnBreak && breakStartTime) {
+                totalBreakTime += now - breakStartTime;
+                breakStartTime = null;
+            } else if (!isOnBreak && loginStartTime) {
+                totalLoginTime += now - loginStartTime;
+                loginStartTime = null;
+            }
+
+            const loginSecs = Math.floor(totalLoginTime / 1000);
+            const breakSecs = Math.floor(totalBreakTime / 1000);
+
+            loginDisplay.textContent = `Login Time: ${formatTime(loginSecs)}`;
+            breakDisplay.textContent = `Break Time: ${formatTime(breakSecs)}`;
 
             const stopTime = getISTDateTimeString();
             stopTimeDisplay.textContent = `Stop Time: ${stopTime}`;
