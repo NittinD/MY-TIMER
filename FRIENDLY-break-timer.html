@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Work & Break Timer</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    /* Digital Clock at top-right */
+    #digitalClock {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      background: #222;
+      color: #0f0;
+      padding: 8px 15px;
+      font-family: monospace;
+      font-size: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+      user-select: none;
+      z-index: 1000;
+    }
+
+    .timer-box {
+      background-color: #222;
+      color: #0f0;
+      padding: 20px 30px;
+      border-radius: 10px;
+      font-size: 24px;
+      font-family: monospace;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+      margin-bottom: 20px;
+      min-width: 300px;
+      text-align: center;
+      word-break: break-word;
+    }
+
+    .button-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 10px;
+      justify-content: center;
+      max-width: 100%;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #444;
+      color: #fff;
+      flex: 1 1 120px;
+      max-width: 180px;
+      min-width: 120px;
+      transition: background-color 0.3s;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: #666;
+    }
+
+    button:disabled {
+      background-color: #333;
+      cursor: not-allowed;
+    }
+
+    /* Responsive for smaller screens */
+    @media (max-width: 480px) {
+      .timer-box {
+        font-size: 20px;
+        padding: 15px 20px;
+        min-width: 90vw;
+      }
+      button {
+        font-size: 14px;
+        padding: 10px;
+        min-width: 100%;
+      }
+      .button-box {
+        flex-direction: column;
+        gap: 10px;
+        max-width: 90vw;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="digitalClock">--:--:--</div>
+
+  <div class="timer-box" id="startTimeDisplay">Start Time: --:--:-- | --/--/----</div>
+  <div class="timer-box" id="loginTimer">Login Time: 00:00:00</div>
+  <div class="timer-box" id="breakTimer">Break Time: 00:00:00</div>
+  <div class="timer-box" id="stopTimeDisplay">Stop Time: --:--:-- | --/--/----</div>
+
+  <div class="button-box">
+    <button id="startBtn">Start Time</button>
+    <button id="loginBtn" disabled>Login Session</button>
+    <button id="breakBtn" disabled>Break</button>
+    <button id="stopBtn" disabled>Stop Time</button>
+  </div>
+
+  <script>
+    // Elements
+    const digitalClock = document.getElementById("digitalClock");
+    const startTimeDisplay = document.getElementById("startTimeDisplay");
+    const stopTimeDisplay = document.getElementById("stopTimeDisplay");
+    const loginTimerDisplay = document.getElementById("loginTimer");
+    const breakTimerDisplay = document.getElementById("breakTimer");
+
+    const startBtn = document.getElementById("startBtn");
+    const loginBtn = document.getElementById("loginBtn");
+    const breakBtn = document.getElementById("breakBtn");
+    const stopBtn = document.getElementById("stopBtn");
+
+    // Time tracking variables
+    let startTime = null;
+    let stopTime = null;
+
+    let loginStartTime = null;
+    let breakStartTime = null;
+
+    let totalLoginSeconds = 0;
+    let totalBreakSeconds = 0;
+
+    let loginInterval = null;
+    let breakInterval = null;
+
+    let isLoginRunning = false;
+    let isBreakRunning = false;
+
+    // Format seconds to HH:MM:SS
+    function formatTime(seconds) {
+      const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
+      const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+      const secs = String(seconds % 60).padStart(2, '0');
+      return `${hrs}:${mins}:${secs}`;
+    }
+
+    // Update digital clock every second
+    function updateDigitalClock() {
+      const now = new Date();
+      digitalClock.textContent = now.toLocaleTimeString();
+    }
+    setInterval(updateDigitalClock, 1000);
+    updateDigitalClock(); // initialize immediately
+
+    function startLoginTimer() {
+      if (isBreakRunning) stopBreakTimer();
+
+      loginStartTime = Date.now();
+      isLoginRunning = true;
+
+      loginInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - loginStartTime) / 1000);
+        loginTimerDisplay.textContent = `Login Time: ${formatTime(totalLoginSeconds + elapsed)}`;
+      }, 1000);
+    }
+
+    function stopLoginTimer() {
+      clearInterval(loginInterval);
+      const elapsed = Math.floor((Date.now() - loginStartTime) / 1000);
+      totalLoginSeconds += elapsed;
+      isLoginRunning = false;
+    }
+
+    function startBreakTimer() {
+      if (isLoginRunning) stopLoginTimer();
+
+      breakStartTime = Date.now();
+      isBreakRunning = true;
+
+      breakInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - breakStartTime) / 1000);
+        breakTimerDisplay.textContent = `Break Time: ${formatTime(totalBreakSeconds + elapsed)}`;
+      }, 1000);
+    }
+
+    function stopBreakTimer() {
+      clearInterval(breakInterval);
+      const elapsed = Math.floor((Date.now() - breakStartTime) / 1000);
+      totalBreakSeconds += elapsed;
+      isBreakRunning = false;
+    }
+
+    // Button events
+    startBtn.addEventListener("click", () => {
+      startTime = new Date();
+      startTimeDisplay.textContent = `Start Time: ${startTime.toLocaleTimeString()} | ${startTime.toLocaleDateString()}`;
+
+      loginBtn.disabled = false;
+      breakBtn.disabled = false;
+      stopBtn.disabled = false;
+      startBtn.disabled = true;
+
+      // Reset session
+      totalLoginSeconds = 0;
+      totalBreakSeconds = 0;
+      loginTimerDisplay.textContent = "Login Time: 00:00:00";
+      breakTimerDisplay.textContent = "Break Time: 00:00:00";
+      stopTimeDisplay.textContent = "Stop Time: --:--:-- | --/--/----";
+
+      // Auto-start login timer
+      startLoginTimer();
+    });
+
+    loginBtn.addEventListener("click", () => {
+      if (!isLoginRunning) {
+        startLoginTimer();
+      }
+    });
+
+    breakBtn.addEventListener("click", () => {
+      if (!isBreakRunning) {
+        startBreakTimer();
+      }
+    });
+
+    stopBtn.addEventListener("click", () => {
+      if (isLoginRunning) stopLoginTimer();
+      if (isBreakRunning) stopBreakTimer();
+
+      stopTime = new Date();
+      stopTimeDisplay.textContent = `Stop Time: ${stopTime.toLocaleTimeString()} | ${stopTime.toLocaleDateString()}`;
+
+      loginBtn.disabled = true;
+      breakBtn.disabled = true;
+      stopBtn.disabled = true;
+      startBtn.disabled = false;
+
+      // Show session summary popup
+      alert(
+        `📝 Session Summary:\n\n` +
+        `Start Time: ${startTime ? startTime.toLocaleString() : '--'}\n` +
+        `Stop Time: ${stopTime ? stopTime.toLocaleString() : '--'}\n` +
+        `Login Time: ${formatTime(totalLoginSeconds)}\n` +
+        `Break Time: ${formatTime(totalBreakSeconds)}`
+      );
+    });
+  </script>
+
+</body>
+</html>
