@@ -16,23 +16,6 @@
       margin: 0;
       padding: 20px;
       box-sizing: border-box;
-      position: relative;
-    }
-
-    /* Digital Clock at top-right */
-    #digitalClock {
-      position: fixed;
-      top: 10px;
-      right: 20px;
-      background: #222;
-      color: #0f0;
-      padding: 8px 15px;
-      font-family: monospace;
-      font-size: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
-      user-select: none;
-      z-index: 1000;
     }
 
     .timer-box {
@@ -103,8 +86,6 @@
 </head>
 <body>
 
-  <div id="digitalClock">--:--:--</div>
-
   <div class="timer-box" id="startTimeDisplay">Start Time: --:--:-- | --/--/----</div>
   <div class="timer-box" id="loginTimer">Login Time: 00:00:00</div>
   <div class="timer-box" id="breakTimer">Break Time: 00:00:00</div>
@@ -118,18 +99,6 @@
   </div>
 
   <script>
-    // Elements
-    const digitalClock = document.getElementById("digitalClock");
-    const startTimeDisplay = document.getElementById("startTimeDisplay");
-    const stopTimeDisplay = document.getElementById("stopTimeDisplay");
-    const loginTimerDisplay = document.getElementById("loginTimer");
-    const breakTimerDisplay = document.getElementById("breakTimer");
-
-    const startBtn = document.getElementById("startBtn");
-    const loginBtn = document.getElementById("loginBtn");
-    const breakBtn = document.getElementById("breakBtn");
-    const stopBtn = document.getElementById("stopBtn");
-
     // Time tracking variables
     let startTime = null;
     let stopTime = null;
@@ -146,6 +115,17 @@
     let isLoginRunning = false;
     let isBreakRunning = false;
 
+    // UI elements
+    const startTimeDisplay = document.getElementById("startTimeDisplay");
+    const stopTimeDisplay = document.getElementById("stopTimeDisplay");
+    const loginTimerDisplay = document.getElementById("loginTimer");
+    const breakTimerDisplay = document.getElementById("breakTimer");
+
+    const startBtn = document.getElementById("startBtn");
+    const loginBtn = document.getElementById("loginBtn");
+    const breakBtn = document.getElementById("breakBtn");
+    const stopBtn = document.getElementById("stopBtn");
+
     // Format seconds to HH:MM:SS
     function formatTime(seconds) {
       const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
@@ -153,14 +133,6 @@
       const secs = String(seconds % 60).padStart(2, '0');
       return `${hrs}:${mins}:${secs}`;
     }
-
-    // Update digital clock every second
-    function updateDigitalClock() {
-      const now = new Date();
-      digitalClock.textContent = now.toLocaleTimeString();
-    }
-    setInterval(updateDigitalClock, 1000);
-    updateDigitalClock(); // initialize immediately
 
     function startLoginTimer() {
       if (isBreakRunning) stopBreakTimer();
