@@ -1,83 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Work & Break Timer</title>
-    <style>
-        body {
-            background-color: #121212;
-            color: #fff;
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
+  <meta charset="UTF-8">
+  <title>Work & Break Timer</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
 
-        .timer-box {
-            background-color: #222;
-            color: #0f0;
-            padding: 20px 30px;
-            border-radius: 10px;
-            font-size: 24px;
-            font-family: monospace;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
-            margin-bottom: 20px;
-            min-width: 300px;
-            text-align: center;
-        }
+    .timer-box {
+      background-color: #222;
+      color: #0f0;
+      padding: 20px 30px;
+      border-radius: 10px;
+      font-size: 24px;
+      font-family: monospace;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+      margin-bottom: 20px;
+      min-width: 300px;
+      text-align: center;
+    }
 
-        .button-box {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-top: 10px;
-        }
+    .button-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 10px;
+    }
 
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            background-color: #444;
-            color: #fff;
-        }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #444;
+      color: #fff;
+    }
 
-        button:hover {
-            background-color: #666;
-        }
+    button:hover {
+      background-color: #666;
+    }
 
-        button:disabled {
-            background-color: #333;
-            cursor: not-allowed;
-        }
-    </style>
+    button:disabled {
+      background-color: #333;
+      cursor: not-allowed;
+    }
+  </style>
 </head>
 <body>
 
-<div class="timer-box" id="startTimeDisplay">Start Time: --:--:-- | --/--/----</div>
-<div class="timer-box" id="loginTimer">Login Time: 00:00:00</div>
-<div class="timer-box" id="breakTimer">Break Time: 00:00:00</div>
-<div class="timer-box" id="stopTimeDisplay">Stop Time: --:--:-- | --/--/----</div>
+  <div class="timer-box" id="startTimeDisplay">Start Time: --:--:-- | --/--/----</div>
+  <div class="timer-box" id="loginTimer">Login Time: 00:00:00</div>
+  <div class="timer-box" id="breakTimer">Break Time: 00:00:00</div>
+  <div class="timer-box" id="stopTimeDisplay">Stop Time: --:--:-- | --/--/----</div>
 
-<div class="button-box">
+  <div class="button-box">
     <button id="startBtn">Start Time</button>
     <button id="loginBtn" disabled>Login Session</button>
     <button id="breakBtn" disabled>Break</button>
     <button id="stopBtn" disabled>Stop Time</button>
-</div>
+  </div>
 
-<script>
+  <script>
+    // Time tracking variables
     let startTime = null;
-    let loginStart = null;
-    let breakStart = null;
     let stopTime = null;
 
-    let loginElapsed = 0;
-    let breakElapsed = 0;
+    let loginStartTime = null;
+    let breakStartTime = null;
+
+    let totalLoginSeconds = 0;
+    let totalBreakSeconds = 0;
 
     let loginInterval = null;
     let breakInterval = null;
@@ -85,102 +87,114 @@
     let isLoginRunning = false;
     let isBreakRunning = false;
 
-    const startTimeDisplay = document.getElementById("startTimeDisplay");
-    const stopTimeDisplay = document.getElementById("stopTimeDisplay");
-    const loginTimer = document.getElementById("loginTimer");
-    const breakTimer = document.getElementById("breakTimer");
-
+    // UI elements
     const startBtn = document.getElementById("startBtn");
     const loginBtn = document.getElementById("loginBtn");
     const breakBtn = document.getElementById("breakBtn");
     const stopBtn = document.getElementById("stopBtn");
 
+    const startTimeDisplay = document.getElementById("startTimeDisplay");
+    const stopTimeDisplay = document.getElementById("stopTimeDisplay");
+    const loginTimerDisplay = document.getElementById("loginTimer");
+    const breakTimerDisplay = document.getElementById("breakTimer");
+
+    // Time formatter
     function formatTime(seconds) {
-        const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
-        const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
-        const secs = String(seconds % 60).padStart(2, '0');
-        return `${hrs}:${mins}:${secs}`;
+      const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
+      const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+      const secs = String(seconds % 60).padStart(2, '0');
+      return `${hrs}:${mins}:${secs}`;
     }
 
-    function updateLoginTimer() {
+    // Start login timer
+    function startLoginTimer() {
+      if (isBreakRunning) stopBreakTimer();
+
+      loginStartTime = new Date();
+      isLoginRunning = true;
+
+      loginInterval = setInterval(() => {
         const now = new Date();
-        loginElapsed = Math.floor((now - loginStart) / 1000) + loginElapsed;
-        loginStart = now;
-        loginTimer.textContent = `Login Time: ${formatTime(loginElapsed)}`;
+        const elapsed = Math.floor((now - loginStartTime) / 1000);
+        loginTimerDisplay.textContent = `Login Time: ${formatTime(totalLoginSeconds + elapsed)}`;
+      }, 1000);
     }
 
-    function updateBreakTimer() {
+    // Stop login timer
+    function stopLoginTimer() {
+      clearInterval(loginInterval);
+      const now = new Date();
+      const elapsed = Math.floor((now - loginStartTime) / 1000);
+      totalLoginSeconds += elapsed;
+      isLoginRunning = false;
+    }
+
+    // Start break timer
+    function startBreakTimer() {
+      if (isLoginRunning) stopLoginTimer();
+
+      breakStartTime = new Date();
+      isBreakRunning = true;
+
+      breakInterval = setInterval(() => {
         const now = new Date();
-        breakElapsed = Math.floor((now - breakStart) / 1000) + breakElapsed;
-        breakStart = now;
-        breakTimer.textContent = `Break Time: ${formatTime(breakElapsed)}`;
+        const elapsed = Math.floor((now - breakStartTime) / 1000);
+        breakTimerDisplay.textContent = `Break Time: ${formatTime(totalBreakSeconds + elapsed)}`;
+      }, 1000);
     }
 
+    // Stop break timer
+    function stopBreakTimer() {
+      clearInterval(breakInterval);
+      const now = new Date();
+      const elapsed = Math.floor((now - breakStartTime) / 1000);
+      totalBreakSeconds += elapsed;
+      isBreakRunning = false;
+    }
+
+    // Button actions
     startBtn.addEventListener("click", () => {
-        startTime = new Date();
-        startTimeDisplay.textContent = `Start Time: ${startTime.toLocaleTimeString()} | ${startTime.toLocaleDateString()}`;
+      startTime = new Date();
+      startTimeDisplay.textContent = `Start Time: ${startTime.toLocaleTimeString()} | ${startTime.toLocaleDateString()}`;
 
-        loginBtn.disabled = false;
-        breakBtn.disabled = false;
-        stopBtn.disabled = false;
-        startBtn.disabled = true;
+      loginBtn.disabled = false;
+      breakBtn.disabled = false;
+      stopBtn.disabled = false;
+      startBtn.disabled = true;
 
-        // Reset
-        loginElapsed = 0;
-        breakElapsed = 0;
-        loginTimer.textContent = "Login Time: 00:00:00";
-        breakTimer.textContent = "Break Time: 00:00:00";
-        stopTimeDisplay.textContent = "Stop Time: --:--:-- | --/--/----";
+      // Reset previous session data
+      totalLoginSeconds = 0;
+      totalBreakSeconds = 0;
+      loginTimerDisplay.textContent = "Login Time: 00:00:00";
+      breakTimerDisplay.textContent = "Break Time: 00:00:00";
+      stopTimeDisplay.textContent = "Stop Time: --:--:-- | --/--/----";
     });
 
     loginBtn.addEventListener("click", () => {
-        if (!isLoginRunning) {
-            if (isBreakRunning) {
-                clearInterval(breakInterval);
-                isBreakRunning = false;
-            }
-
-            loginStart = new Date();
-            loginInterval = setInterval(updateLoginTimer, 1000);
-            isLoginRunning = true;
-
-            loginBtn.disabled = true;
-            breakBtn.disabled = false;
-        }
+      if (!isLoginRunning) {
+        startLoginTimer();
+      }
     });
 
     breakBtn.addEventListener("click", () => {
-        if (!isBreakRunning) {
-            if (isLoginRunning) {
-                clearInterval(loginInterval);
-                isLoginRunning = false;
-            }
-
-            breakStart = new Date();
-            breakInterval = setInterval(updateBreakTimer, 1000);
-            isBreakRunning = true;
-
-            breakBtn.disabled = true;
-            loginBtn.disabled = false;
-        }
+      if (!isBreakRunning) {
+        startBreakTimer();
+      }
     });
 
     stopBtn.addEventListener("click", () => {
-        if (isLoginRunning) clearInterval(loginInterval);
-        if (isBreakRunning) clearInterval(breakInterval);
+      if (isLoginRunning) stopLoginTimer();
+      if (isBreakRunning) stopBreakTimer();
 
-        isLoginRunning = false;
-        isBreakRunning = false;
+      stopTime = new Date();
+      stopTimeDisplay.textContent = `Stop Time: ${stopTime.toLocaleTimeString()} | ${stopTime.toLocaleDateString()}`;
 
-        stopTime = new Date();
-        stopTimeDisplay.textContent = `Stop Time: ${stopTime.toLocaleTimeString()} | ${stopTime.toLocaleDateString()}`;
-
-        startBtn.disabled = false;
-        loginBtn.disabled = true;
-        breakBtn.disabled = true;
-        stopBtn.disabled = true;
+      loginBtn.disabled = true;
+      breakBtn.disabled = true;
+      stopBtn.disabled = true;
+      startBtn.disabled = false;
     });
-</script>
+  </script>
 
 </body>
 </html>
